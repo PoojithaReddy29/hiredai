@@ -1,4 +1,4 @@
-# 💼 Haired AI: Resume & Interview Analyzer
+# 💼 Hired AI: Resume & Interview Analyzer
 
 Haired AI is an AI-powered web application designed to help job seekers analyze their resumes, simulate mock interviews, generate tailored interview questions, and evaluate GitHub projects using LLMs (Large Language Models).
 
@@ -39,7 +39,7 @@ Built with **Streamlit**, this tool offers an all-in-one experience for intervie
 ## 📦 Installation
 
 ```bash
-git clone https://github.com/yourusername/haired-ai.git
+git clone https://github.com/yourusername/hiredai.git
 cd haired-ai
 pip install -r requirements.txt
 ```
@@ -104,7 +104,7 @@ All required packages are listed in `requirements.txt`.
 
 ## 🙋‍♂️ Author
 
-Made with ❤️ by [Your Name]
+Made with ❤️ by Poojitha Reddy ds, Hema Kumar Reddy, Harshini
 
 ---
 
