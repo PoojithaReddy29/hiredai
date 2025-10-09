@@ -1,0 +1,8 @@
+/.env
+/hired/
+/__pycache__/
+/llm/__pycache__/
+/github_parser/__pycache__/
+/parser_scorer/__pycache__/
+/tabs/__pycache__/
+/utils/__pycache__/
