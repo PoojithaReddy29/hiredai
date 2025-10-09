@@ -7,6 +7,12 @@ import speech_recognition as sr
 from pydub import AudioSegment
 from playsound import playsound
 import re
+import io
+
+try:
+    import streamlit as st  # type: ignore
+except ImportError:  # pragma: no cover
+    st = None
 
 load_dotenv()
 groq_api_key = os.getenv("GROQ_API_KEY")
@@ -85,17 +91,39 @@ def text_to_speech(text, speed=200):
     playsound("faster_response.mp3")
 
 def speech_to_text():
-    """Convert speech input to text."""
+    """Capture microphone input and transcribe using Groq Whisper with Google fallback."""
     recognizer = sr.Recognizer()
     with sr.Microphone() as source:
-        recognizer.adjust_for_ambient_noise(source, duration=1)
-        recognizer.energy_threshold = 400
-        recognizer.pause_threshold = 10
+        recognizer.adjust_for_ambient_noise(source, duration=0.5)
+        recognizer.energy_threshold = 300
+        recognizer.pause_threshold = 5
         audio = recognizer.listen(source, timeout=None, phrase_time_limit=90)
-    
+
+    audio_wav = audio.get_wav_data(convert_rate=16000, convert_width=2)
+    audio_buffer = io.BytesIO(audio_wav)
+    audio_buffer.name = "speech.wav"
+
     try:
-        return recognizer.recognize_google(audio)
-    except sr.UnknownValueError:
-        return "Could not understand audio. Please try again."
-    except sr.RequestError:
-        return "Speech recognition service unavailable."
+        transcription = client.audio.transcriptions.create(
+            model="whisper-large-v3-turbo",
+            file=(audio_buffer.name, audio_buffer.getvalue()),
+            response_format="text",
+        )
+        if hasattr(transcription, "text"):
+            return transcription.text.strip()
+        if isinstance(transcription, dict) and "text" in transcription:
+            return transcription["text"].strip()
+        return str(transcription)
+    except Exception as exc:
+        message = f"Groq transcription failed, falling back to Google Speech Recognition. Error: {exc}"
+        print(message)
+        if st is not None:
+            st.warning(message)
+        try:
+            return recognizer.recognize_google(audio)
+        except sr.UnknownValueError:
+            return "Could not understand audio. Please try again."
+        except sr.RequestError:
+            return "Speech recognition service unavailable."
+        except Exception as google_exc:
+            return f"Fallback transcription failed: {google_exc}"
