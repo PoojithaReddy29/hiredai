@@ -46,8 +46,10 @@ This project is designed to verify resumes using a Streamlit application.
 
 2. Run the Streamlit application:
     ```sh
-    streamlit run app.py
+    streamlit run app_main.py
     ```
+
+   *Alternatively, `streamlit run main.py` forwards to the same entry point.*
 
 3. Open your web browser and go to `http://localhost:8501` to view the application.
 

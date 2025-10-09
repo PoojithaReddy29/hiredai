@@ -1,5 +1,6 @@
-import ollama
+import os
 import fitz  # PyMuPDF for PDF text extraction
+from dotenv import load_dotenv
 from groq import Groq
 from gtts import gTTS
 import speech_recognition as sr
@@ -7,14 +8,27 @@ from pydub import AudioSegment
 from playsound import playsound
 import re
 
-# Initialize Groq client (Replace with your API Key)
-client = Groq(api_key="")
+load_dotenv()
+groq_api_key = os.getenv("GROQ_API_KEY")
 
-def get_ollama_response(input_text, resume_text, prompt):
-    model = "llama2"  # Change to "mistral" if needed
+if not groq_api_key:
+    raise ValueError("Missing GROQ_API_KEY environment variable.")
+
+# Initialize Groq client using the provided API key
+client = Groq(api_key=groq_api_key)
+
+
+def get_groq_response(input_text, resume_text, prompt):
+    model = "llama-3.3-70b-versatile"
     full_prompt = f"{prompt}\n\nJob Description:\n{input_text}\n\nResume Content:\n{resume_text}"
-    response = ollama.chat(model=model, messages=[{"role": "user", "content": full_prompt}])
-    return response['message']['content'] if 'message' in response else "Error: Unexpected response format."
+    response = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": full_prompt}],
+        temperature=0.7,
+        max_tokens=1024,
+    )
+
+    return response.choices[0].message.content.strip()
 
 def extract_text_from_pdf(uploaded_file):
     """Extract text from a PDF file."""
@@ -46,7 +60,7 @@ def interview_chatbot(job_type, conversation_history, prompt_type="next_question
     messages = [{"role": "system", "content": prompts[prompt_type]}] + conversation_history
 
     response = client.chat.completions.create(
-        model="llama3-70b-8192",
+        model="llama-3.3-70b-versatile",
         messages=messages,
         temperature=1,
         max_tokens=1024,

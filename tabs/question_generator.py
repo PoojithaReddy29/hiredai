@@ -10,19 +10,24 @@ def render_question_generator(inputs):
     category = st.selectbox("Select Category", ["DSA", "SQL", "System Design", "Behavioral", "AI/ML", "Other"])
 
     if company:
-        company_description = get_company_description(company)
+        with st.spinner(f"Fetching description for {company}..."):
+            company_description = get_company_description(company)
+
         st.subheader(f"About {company}")
         st.write(company_description)
 
     if st.button("Generate Questions"):
         if company and role and category:
-            questions = generate_interview_questions(company, role, category)
+            with st.spinner("Generating interview questions..."):
+                questions = generate_interview_questions(company, role, category)
 
             if questions:
                 st.success(f"Successfully generated {len(questions)} {category} questions!")
-                solutions = generate_solutions(category, questions)
 
-                st.subheader(f"{category} Questions & Answers")
+                with st.spinner("Generating solutions..."):
+                    solutions = generate_solutions(category, questions)
+
+                st.subheader(f"{category} Interview Questions & Answers")
                 for solution in solutions:
                     st.markdown(solution)
             else:

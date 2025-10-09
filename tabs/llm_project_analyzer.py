@@ -41,53 +41,55 @@ def render_llm_project_analyzer(inputs):
     uploaded_resume = inputs["uploaded_resume"]
     github_name = inputs["github_username"]
 
-    if st.button("🚀 Run Analysis"):
+    if st.button("Run Analysis"):
         if not uploaded_resume or not github_name:
-            st.error("⚠️ Please upload your resume and provide your GitHub username.")
+            st.error("Please upload a resume and enter a valid GitHub username.")
             return
 
-        with st.spinner("🔄 Analyzing your resume and GitHub projects..."):
-            temp_file_path = "other/temp_resume.pdf"
-            with open(temp_file_path, "wb") as f:
-                f.write(uploaded_resume.read())
+        st.write("Extracting PDF, loading LLM, and processing project details...")
 
-            documents = read_pdf(temp_file_path)
-            llm = load_llm()
-            llm_think = load_llm_think()
+        temp_file_path = "other/temp_resume.pdf"
+        with open(temp_file_path, "wb") as f:
+            f.write(uploaded_resume.read())
 
-            project_details = llm_project_details(llm, documents)
-            structured_projects = extract_project_names(project_details, llm)
-            repository_list = get_user_repositories(github_name)
-            valid_projects = validate_projects(structured_projects, repository_list, llm)
+        documents = read_pdf(temp_file_path)
+        llm = load_llm()
+        llm_think = load_llm_think()
 
-            st.subheader("📚 Project Details")
-            st.write(project_details)
+        project_details = llm_project_details(llm, documents)
+        structured_projects = extract_project_names(project_details, llm)
+        repository_list = get_user_repositories(github_name)
+        valid_projects = validate_projects(structured_projects, repository_list, llm)
 
-            st.subheader("✅ Valid Projects Found")
-            st.write(valid_projects)
+        st.subheader("Project Details")
+        st.write(project_details)
 
-            for prj in valid_projects.valid_projects:
-                if prj != 'N/A':
-                    st.write(f"### 🔹 Analyzing Project: {prj}")
+        st.subheader("Valid Projects")
+        st.write(valid_projects)
 
-                    branch, readme_content = scrape_readme(github_name, prj)
+        for prj in getattr(valid_projects, "valid_projects", []):
+            if prj != 'N/A':
+                st.write(f"### 🔹 Analyzing Project: {prj}")
 
-                    if not readme_content:
-                        st.warning(f"No README found for '{prj}'. Skipping...")
-                        continue
+                branch, readme_content = scrape_readme(github_name, prj)
 
-                    deep_results = project_scorer(prj, readme_content, project_details, llm_think)
+                if not readme_content:
+                    st.warning(f"No README found for '{prj}'. Skipping...")
+                    continue
 
-                    with st.expander(f"🔍 Deep Analysis for {prj}"):
-                        st.write(deep_results)
+                deep_results = project_scorer(prj, readme_content, project_details, llm_think)
 
-                    result_projects = final_scorer(deep_results, llm)
-                    st.write("📊 **Final Score:**", result_projects)
+                with st.expander(f"🔍 Deep Analysis for {prj}"):
+                    st.write(deep_results)
 
-                    qa_pairs = generate_questions_and_answers(prj, readme_content, llm)
+                result_projects = final_scorer(deep_results, llm)
+                st.write("✅ **Final Score:**", result_projects)
+                st.markdown("---")
 
-                    with st.expander(f"🎤 Interview Questions & Answers for {prj}"):
-                        for q, a in qa_pairs:
-                            st.markdown(f"**Q:** {q}")
-                            st.markdown(f"**A:** {a}")
-                            st.markdown("---")
+                qa_pairs = generate_questions_and_answers(prj, readme_content, llm)
+
+                with st.expander(f"🎤 Interview Questions for {prj}"):
+                    for q, a in qa_pairs:
+                        st.write(f"**Q:** {q}")
+                        st.write(f"**A:** {a}")
+                        st.markdown("---")
